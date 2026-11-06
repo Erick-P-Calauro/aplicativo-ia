@@ -33,3 +33,8 @@ dist-ssr
 *.sw?
 
 contexto.md
+**.err
+**.log
+**/__pycache__
+**/STATUS-REQUISITOS.md
+**/data/**
