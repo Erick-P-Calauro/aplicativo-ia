@@ -1,6 +1,7 @@
 **/Include
 **/Lib
 **/Scripts
+**/data
 **/libs.txt
 *.cfg
 
@@ -37,4 +38,3 @@ contexto.md
 **.log
 **/__pycache__
 **/STATUS-REQUISITOS.md
-**/data/**
