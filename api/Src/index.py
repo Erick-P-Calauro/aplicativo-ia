@@ -1,46 +1,28 @@
 import os
 import uuid
 
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
-
-from .configuration.config import PHOTOS_DIR, ROOT_USER, ROOT_PASSWD
-from .repository.connection import Base, engine, get_db
+from .configuration.config import ROOT_USER
+from .repository.db_repository import Base, engine, get_db
 from .models import User, UserResponse, FaceBox, FaceResult, RecognitionResponse
-from .models.dtos import (
-    TokenResponse,
-    LoginRequest,
-    RecognitionEmptyResponse,
-)
+from .models.dtos import (TokenResponse, LoginRequest)
 from .configuration.auth import create_access_token, verify_token, authenticate_root
 from .logger import logger
-from .service.face_service import (
-    generate_embedding,
-    recognize_faces,
-    serialize_vector,
-    deserialize_vector,
-)
+from .service.face_service import (generate_embedding, recognize_faces)
+from .utils.vector_utils import (serialize_vector, deserialize_vector)
 from .repository import user_repository, embedding_repository
+from .utils.image_utils import save_photo as save_photo_util
 
 # create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Aplicativo Reconhecimento Facial")
 
-
 @app.on_event("startup")
 def on_startup():
     logger.info("Servidor iniciado")
-
-
-def _save_photo(user_id: uuid.UUID, data: bytes, filename: str) -> str:
-    ext = os.path.splitext(filename)[1] or ".jpg"
-    path = PHOTOS_DIR / f"{user_id}{ext}"
-    with open(path, "wb") as f:
-        f.write(data)
-    return str(path)
-
 
 @app.post("/auth/login", response_model=TokenResponse)
 def login(payload: LoginRequest):
@@ -68,7 +50,7 @@ async def cadastrar_user(
         raise HTTPException(status_code=400, detail="Foto ausente")
 
     user_id = uuid.uuid4()
-    photo_path = _save_photo(user_id, data, photo.filename or "photo.jpg")
+    photo_path = save_photo_util(user_id, data, photo.filename or "photo.jpg")
 
     try:
         vec, _ = generate_embedding(data)

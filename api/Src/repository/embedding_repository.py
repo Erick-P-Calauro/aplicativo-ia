@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from ..models.entities import Embedding
+from ..models.embedding import Embedding
 
 
 def create_embedding(db: Session, user_id, vector_bytes: bytes):
@@ -16,7 +16,7 @@ def list_embeddings_for_user(db: Session, user_id):
 
 def get_all_known(db: Session):
     """Retorna lista de (user_id, name, vector_bytes) para todos os usuários."""
-    from ..models.entities import User
+    from ..models.user import User
 
     result = []
     users = db.query(User).all()

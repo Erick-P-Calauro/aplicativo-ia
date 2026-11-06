@@ -1,4 +1,5 @@
-from .entities import User, Embedding
+from .user import User
+from .embedding import Embedding
 from .dtos import (
     UserResponse,
     FaceBox,

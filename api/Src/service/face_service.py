@@ -8,6 +8,8 @@ import torch
 from PIL import Image
 from facenet_pytorch import InceptionResnetV1
 
+from ..utils.image_utils import read_image, crop_image
+from ..utils.vector_utils import serialize_vector, deserialize_vector
 from ..configuration.config import (
     MODELS_DIR,
     YUNET_MODEL_URL,
@@ -27,17 +29,9 @@ if not YUNET_PATH.exists():
 _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _RESNET = InceptionResnetV1(pretrained="vggface2").eval().to(_DEVICE)
 
-def _read_image(image_bytes: bytes):
-    arr = np.frombuffer(image_bytes, dtype=np.uint8)
-    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    if img is None:
-        raise ValueError("Imagem inválida ou não suportada")
-    return img
-
-
 def detect_faces(image_bytes: bytes):
     """Retorna lista de (x, y, w, h) detectados com YuNet."""
-    img = _read_image(image_bytes)
+    img = read_image(image_bytes)
     h, w = img.shape[:2]
     detector = cv2.FaceDetectorYN_create(
         str(YUNET_PATH), "", (w, h), 0.6, 0.3, 5000
@@ -58,7 +52,7 @@ def detect_faces(image_bytes: bytes):
 
 def _crop_and_embed(img, box):
     x, y, w, h = box
-    face = img[y : y + h, x : x + w]
+    face = crop_image(img, (x, y, w, h))
     if face.size == 0:
         return None
     face_rgb = cv2.cvtColor(face, cv2.COLOR_BGR2RGB)
@@ -123,9 +117,4 @@ def recognize_faces(image_bytes: bytes, known: list):
     return results, True
 
 
-def serialize_vector(vec: np.ndarray) -> bytes:
-    return vec.astype("float32").tobytes()
-
-
-def deserialize_vector(data: bytes) -> np.ndarray:
-    return np.frombuffer(data, dtype=np.float32)
+# serialize_vector / deserialize_vector moved to utils.vector_utils
