@@ -1,5 +1,3 @@
-import os
-
 import psycopg
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase

@@ -1,6 +1,5 @@
 import os
 import uuid
-
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
@@ -20,22 +19,16 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Aplicativo Reconhecimento Facial")
 
-@app.on_event("startup")
-def on_startup():
-    logger.info("Servidor iniciado")
-
 @app.post("/auth/login", response_model=TokenResponse)
 def login(payload: LoginRequest):
-    if not authenticate_root(payload.root_user, payload.root_passwd):
+    if not authenticate_root(payload.login, payload.password):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     token = create_access_token(ROOT_USER)
-    return TokenResponse(access_token=token)
-
+    return TokenResponse(token=token)
 
 @app.get("/user", response_model=list[UserResponse])
 def listar_users(db: Session = Depends(get_db), _=Depends(verify_token)):
     return user_repository.list_users(db)
-
 
 @app.post("/user/cadastrar", response_model=UserResponse, status_code=201)
 async def cadastrar_user(
@@ -45,7 +38,9 @@ async def cadastrar_user(
 ):
     if not photo.content_type or not photo.content_type.startswith("image/"):
         raise HTTPException(status_code=415, detail="Tipo de arquivo não suportado")
+    
     data = await photo.read()
+    
     if not data:
         raise HTTPException(status_code=400, detail="Foto ausente")
 
@@ -67,7 +62,6 @@ async def cadastrar_user(
 
     logger.info(f"Usuário cadastrado id={user.id} name={user.name}")
     return user
-
 
 @app.delete("/user/{user_id}", status_code=204)
 def deletar_user(user_id: uuid.UUID, db: Session = Depends(get_db), _=Depends(verify_token)):
@@ -118,7 +112,6 @@ async def reconhecer_face(
             FaceResult(
                 box=FaceBox(x=x, y=y, w=w, h=h),
                 name=name,
-                user_id=uid,
                 score=score,
             )
         )

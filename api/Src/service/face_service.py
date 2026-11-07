@@ -1,15 +1,10 @@
-import io
 import urllib.request
-from pathlib import Path
-
 import cv2
 import numpy as np
 import torch
 from PIL import Image
 from facenet_pytorch import InceptionResnetV1
-
 from ..utils.image_utils import read_image, crop_image
-from ..utils.vector_utils import serialize_vector, deserialize_vector
 from ..configuration.config import (
     MODELS_DIR,
     YUNET_MODEL_URL,
@@ -17,15 +12,13 @@ from ..configuration.config import (
     THRESHOLD,
 )
 
-# --- YuNet model download -----------------------------------------------------
 YUNET_PATH = MODELS_DIR / YUNET_MODEL_NAME
 if not YUNET_PATH.exists():
     try:
         urllib.request.urlretrieve(YUNET_MODEL_URL, YUNET_PATH)
-    except Exception as exc:  # pragma: no cover
+    except Exception as exc:  
         raise RuntimeError(f"Falha ao baixar modelo YuNet: {exc}")
 
-# --- Facenet (InceptionResnetV1) ---------------------------------------------
 _DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _RESNET = InceptionResnetV1(pretrained="vggface2").eval().to(_DEVICE)
 
@@ -100,7 +93,7 @@ def recognize_faces(image_bytes: bytes, known: list):
         if vec is None:
             continue
         best_uid = None
-        best_name = "Não cadastrado"
+        best_name = "Pessoa não conhecida."
         best_score = 0.0
         for (uid, name, kvec) in known:
             score = float(np.dot(vec, kvec))
@@ -109,12 +102,8 @@ def recognize_faces(image_bytes: bytes, known: list):
                 if score >= THRESHOLD:
                     best_uid = uid
                     best_name = name
-        # if best below threshold, ensure not cadastrado
         if best_score < THRESHOLD:
             best_uid = None
-            best_name = "Não cadastrado"
+            best_name = "Pessoa não conhecida."
         results.append((box, best_name, best_uid, float(best_score)))
     return results, True
-
-
-# serialize_vector / deserialize_vector moved to utils.vector_utils

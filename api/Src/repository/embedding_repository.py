@@ -1,7 +1,5 @@
 from sqlalchemy.orm import Session
-
 from ..models.embedding import Embedding
-
 
 def create_embedding(db: Session, user_id, vector_bytes: bytes):
     emb = Embedding(user_id=user_id, vector=vector_bytes)

@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta, timezone
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-
 from .config import ROOT_USER, ROOT_PASSWD, JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES
 
 security = HTTPBearer(auto_error=False)

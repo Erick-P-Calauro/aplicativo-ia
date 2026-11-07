@@ -1,10 +1,8 @@
 import uuid
 from datetime import datetime
-
 from sqlalchemy import Column, DateTime, ForeignKey, LargeBinary
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-
 from ..repository.db_repository import Base
 
 
